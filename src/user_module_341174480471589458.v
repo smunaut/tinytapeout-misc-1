@@ -172,6 +172,69 @@ module user_module_341174480471589458 (
 	);
 
 
+	// Ring oscillator
+	// ---------------
+
+	// Signals
+	wire  [1:0] osc_ctrl;
+	wire [17:0] osc_chain;
+	wire [16:0] osc_chain_dly;
+	wire        osc_mux;
+	wire        osc_out;
+
+	// IOs
+	assign osc_ctrl = eio_in[5:4];
+
+	// Chain
+		// First
+	assign osc_chain[0] = osc_out;
+
+		// Delay
+	sky130_fd_sc_hd__clkdlybuf4s50_1 osc_dly_I[16:0] (
+`ifdef WITH_POWER
+		.VPWR (1'b1),
+		.VGND (1'b0),
+`endif
+		.A    (osc_chain[16:0]),
+		.X    (osc_chain_dly)
+	);
+
+		// Inverter
+	sky130_fd_sc_hd__clkinv_1 osc_inv_I[16:0] (
+`ifdef WITH_POWER
+		.VPWR (1'b1),
+		.VGND (1'b0),
+`endif
+		.A    (osc_chain_dly),
+		.Y    (osc_chain[17:1])
+	);
+
+	// Feedback mux
+	sky130_fd_sc_hd__mux4_1 osc_mux_I (
+`ifdef WITH_POWER
+		.VPWR (1'b1),
+		.VGND (1'b0),
+`endif
+		.A0   (1'b0),
+		.A1   (osc_chain[17]),
+		.A2   (osc_chain[9]),
+		.A3   (osc_chain[5]),
+		.X    (osc_mux),
+		.S0   (osc_ctrl[0]),
+		.S1   (osc_ctrl[1])
+	);
+
+	// Output buffer
+	sky130_fd_sc_hd__clkbuf_2 osc_buf_I (
+`ifdef WITH_POWER
+		.VPWR (1'b1),
+		.VGND (1'b0),
+`endif
+		.A    (osc_mux),
+		.X    (osc_out)
+	);
+
+
 	// Dummy
 	// -----
 

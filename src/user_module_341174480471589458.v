@@ -142,9 +142,11 @@ module user_module_341174480471589458 (
 	);
 
 	// Input [7:4] is data
+		// For the first 7 groups, we have latches
+		// The last group is pulse gen and not handled here
 	genvar i;
 	generate
-		for (i=0; i<8; i=i+1) begin
+		for (i=0; i<7; i=i+1) begin
 			sky130_fd_sc_hd__dlxtn_1 in_latch_I[3:0] (
 `ifdef WITH_POWER
 				.VPWR (1'b1),
@@ -395,6 +397,49 @@ module user_module_341174480471589458 (
 		.A1   (lfsr_ctrl[0]),
 		.S    (lfsr_ctrl[1]),
 		.X    (lfsr_init)
+	);
+
+
+	// Pulse generator
+	// ---------------
+	// Writes to the last group of input IO generate pulses in `clk` domain
+	// and not constant values
+
+	// Signals
+	wire  [1:0] pgen_latch_reg;
+	wire  [3:0] pgen_match;
+
+	// Double register the latch signal
+	sky130_fd_sc_hd__dfxtp_1 pgen_sync_I[1:0] (
+`ifdef WITH_POWER
+		.VPWR (1'b1),
+		.VGND (1'b0),
+`endif
+		.D    ({pgen_latch_reg[0], eio_latch_n[7]}),
+		.Q    ({pgen_latch_reg[1], pgen_latch_reg[0]}),
+		.CLK  (clk_fast)
+	);
+
+	// On rising edge of latch signal, generate pulses
+	sky130_fd_sc_hd__and3b_1 pgen_match_I[3:0] (
+`ifdef WITH_POWER
+		.VPWR (1'b1),
+		.VGND (1'b0),
+`endif
+		.A_N  (pgen_latch_reg[1]),
+		.B    (pgen_latch_reg[0]),
+		.C    (io_in[7:4]),
+		.X    (pgen_match)
+	);
+
+	sky130_fd_sc_hd__dfxtp_1 pgen_reg_I[3:0] (
+`ifdef WITH_POWER
+		.VPWR (1'b1),
+		.VGND (1'b0),
+`endif
+		.D    (pgen_match),
+		.Q    (eio_in[31:28]),
+		.CLK  (clk_fast)
 	);
 
 

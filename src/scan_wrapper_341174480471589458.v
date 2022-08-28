@@ -62,6 +62,7 @@ module scan_wrapper_341174480471589458 (
     // wires needed
     wire [NUM_IOS-1:0] scan_data_out;   // output of the each scan chain flop
     wire [NUM_IOS-1:0] scan_data_in;    // input of each scan chain flop
+    wire               module_latch_in; // buffered version of latch_enable_in
     wire [NUM_IOS-1:0] module_data_in;  // the data that enters the user module
     wire [NUM_IOS-1:0] module_data_out; // the data from the user module
 
@@ -95,23 +96,25 @@ module scan_wrapper_341174480471589458 (
         .SCE        (scan_select_in),
         .Q          (scan_data_out)
     );
+    `endif
+    `endif
 
-    // latch is used to latch the input data of the user module while the scan chain is used to capture the user module's outputs
-    // https://antmicro-skywater-pdk-docs.readthedocs.io/en/test-submodules-in-rtd/contents/libraries/sky130_fd_sc_hd/cells/dlxtp/README.html
-    sky130_fd_sc_hd__dlxtp_1 latch [NUM_IOS-1:0] (
+    // Send output of scan chain directly
+    assign module_data_in = scan_data_out;
+
+    // Buffer latch signal
+    sky130_fd_sc_hd__buf_2 latch_buf (
 `ifdef WITH_POWER
         .VPWR       (1'b1),
         .VGND       (1'b0),
 `endif
-        .D          (scan_data_out),
-        .GATE       (latch_enable_in),
-        .Q          (module_data_in)
+        .A          (latch_enable_in),
+        .X          (module_latch_in)
     );
-    `endif
-    `endif
 
     // instantiate the wokwi module
     user_module_341174480471589458 user_module(
+        .latch_in  (module_latch_in),
         .io_in     (module_data_in),
         .io_out    (module_data_out)
     );

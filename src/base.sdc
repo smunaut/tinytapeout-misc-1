@@ -1,5 +1,5 @@
-# Create a clock from the internal io_in[0] @ 100 MHz
-create_clock [get_pins "\latch[0]/Q"] -name clk_sys -period 10
+# Create a clock from the internal io_in[0] @ 10 MHz
+create_clock [get_pins "\user_module.in_clk_slow_I/Q"] -name clk_slow -period 100
 
 # Create a clock for the scan chain @ 200 MHz
 create_clock -name clk_scan_in -period 5 [get_ports {clk_in}]
@@ -32,10 +32,10 @@ puts "\[INFO\]: Setting load to: $cap_load"
 set_load  $cap_load [all_outputs]
 
 puts "\[INFO\]: Setting clock uncertainity to: $::env(SYNTH_CLOCK_UNCERTAINITY)"
-set_clock_uncertainty $::env(SYNTH_CLOCK_UNCERTAINITY) [get_clocks {clk_sys clk_scan_in clk_scan_out}]
+set_clock_uncertainty $::env(SYNTH_CLOCK_UNCERTAINITY) [get_clocks {clk_slow clk_scan_in clk_scan_out}]
 
 puts "\[INFO\]: Setting clock transition to: $::env(SYNTH_CLOCK_TRANSITION)"
-set_clock_transition $::env(SYNTH_CLOCK_TRANSITION) [get_clocks {clk_sys clk_scan_in clk_scan_out}]
+set_clock_transition $::env(SYNTH_CLOCK_TRANSITION) [get_clocks {clk_slow clk_scan_in clk_scan_out}]
 
 puts "\[INFO\]: Setting timing derate to: [expr {$::env(SYNTH_TIMING_DERATE) * 100}] %"
 set_timing_derate -early [expr {1-$::env(SYNTH_TIMING_DERATE)}]

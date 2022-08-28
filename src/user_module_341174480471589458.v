@@ -303,10 +303,105 @@ module user_module_341174480471589458 (
 	);
 
 
+	// 16 bits LFSR
+	// ------------
+
+	// Signals
+	wire  [3:0] lfsr_ctrl;
+
+	wire        lfsr_clk_mux;
+	wire        lfsr_clk_gate;
+	wire        lfsr_clk_buf;
+
+	wire [15:0] lfsr_in;
+	wire [15:0] lfsr_out;
+	wire  [2:0] lfsr_xor;
+	wire        lfsr_init;
+
+	// I/O
+	assign lfsr_ctrl = eio_in[11:8];
+	assign eio_out[31:16] = lfsr_out;
+
+	// Clock mux & enable
+	sky130_fd_sc_hd__mux2_1 lfsr_clk_mux_I (
+`ifdef WITH_POWER
+		.VPWR (1'b1),
+		.VGND (1'b0),
+`endif
+		.A0   (clk_slow),
+		.A1   (clk_fast),
+		.S    (lfsr_ctrl[2]),
+		.X    (lfsr_clk_mux)
+	);
+
+	sky130_fd_sc_hd__and2_1 lfsr_clk_gate_I (
+`ifdef WITH_POWER
+		.VPWR (1'b1),
+		.VGND (1'b0),
+`endif
+		.A    (lfsr_ctrl[3]),
+		.B    (lfsr_clk_mux),
+		.X    (lfsr_clk_gate)
+	);
+
+	sky130_fd_sc_hd__clkbuf_8 lfsr_clk_buf_I (
+`ifdef WITH_POWER
+		.VPWR (1'b1),
+		.VGND (1'b0),
+`endif
+		.A    (lfsr_clk_gate),
+		.X    (lfsr_clk_buf)
+	);
+
+	// Input mapping
+	assign lfsr_in = {
+		lfsr_init,
+		lfsr_out[15],
+		lfsr_xor[2:1],
+		lfsr_out[12],
+		lfsr_xor[0],
+		lfsr_out[10:1]
+	};
+
+	// Registers
+	sky130_fd_sc_hd__dfxtp_1 lfsr_reg_I[15:0] (
+`ifdef WITH_POWER
+		.VPWR (1'b1),
+		.VGND (1'b0),
+`endif
+		.D    (lfsr_in),
+		.Q    (lfsr_out),
+		.CLK  (lfsr_clk_buf)
+	);
+
+	// XORs
+	sky130_fd_sc_hd__xor2_1 lfsr_xor_I[2:0] (
+`ifdef WITH_POWER
+		.VPWR (1'b1),
+		.VGND (1'b0),
+`endif
+		.A    ({lfsr_out[14], lfsr_out[13], lfsr_out[11]}),
+		.B    (lfsr_out[0]),
+		.X    (lfsr_xor)
+	);
+
+	// Init
+	sky130_fd_sc_hd__mux2_1 lfsr_init_I (
+`ifdef WITH_POWER
+		.VPWR (1'b1),
+		.VGND (1'b0),
+`endif
+		.A0   (lfsr_out[0]),
+		.A1   (lfsr_ctrl[0]),
+		.S    (lfsr_ctrl[1]),
+		.X    (lfsr_init)
+	);
+
+
 	// Dummy
 	// -----
 
 	// Just link in/output
-	assign eio_out = eio_in;
+	assign eio_out[15:0] = eio_in[15:0];
 
 endmodule // user_module_341174480471589458

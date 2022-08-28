@@ -19,6 +19,7 @@ module user_module_341174480471589458 (
 	wire  [7:0] eio_latch_n;
 
 	wire        clk_slow;
+	wire        clk_fast;
 
 
 	// IO extension
@@ -232,6 +233,73 @@ module user_module_341174480471589458 (
 `endif
 		.A    (osc_mux),
 		.X    (osc_out)
+	);
+
+
+	// Clock divider
+	// -------------
+	// Should support 1:1 / 1:4 / 1:16 / 1:64
+
+	// Signals
+	wire  [1:0] clk_div_ctrl;
+	wire  [6:0] clk_div_chain;
+	wire  [6:0] clk_div_chain_n;
+	wire        clk_div_mux;
+
+	// IOs
+	assign clk_div_ctrl = eio_in[7:6];
+
+	// Input
+	assign clk_div_chain[0] = osc_out;
+
+	// 6 stages of divide-by-2
+	generate
+		for (i=1; i<7; i=i+1)
+		begin
+			sky130_fd_sc_hd__inv_1 clk_div_inv_I (
+`ifdef WITH_POWER
+				.VPWR (1'b1),
+				.VGND (1'b0),
+`endif
+				.A    (clk_div_chain[i]),
+				.Y    (clk_div_chain_n[i])
+			);
+
+			sky130_fd_sc_hd__dfxtp_1 clk_div_reg_I (
+`ifdef WITH_POWER
+				.VPWR (1'b1),
+				.VGND (1'b0),
+`endif
+				.D    (clk_div_chain_n[i]),
+				.Q    (clk_div_chain[i]),
+				.CLK  (clk_div_chain[i-1])
+			);
+		end
+	endgenerate
+
+	// Output select
+	sky130_fd_sc_hd__mux4_1 clk_div_mux_I (
+`ifdef WITH_POWER
+		.VPWR (1'b1),
+		.VGND (1'b0),
+`endif
+		.A0   (clk_div_chain[0]),
+		.A1   (clk_div_chain[2]),
+		.A2   (clk_div_chain[4]),
+		.A3   (clk_div_chain[6]),
+		.X    (clk_div_mux),
+		.S0   (clk_div_ctrl[0]),
+		.S1   (clk_div_ctrl[1])
+	);
+
+	// Output buffer
+	sky130_fd_sc_hd__clkbuf_8 clk_div_buf_I (
+`ifdef WITH_POWER
+		.VPWR (1'b1),
+		.VGND (1'b0),
+`endif
+		.A    (clk_div_mux),
+		.X    (clk_fast)
 	);
 
 

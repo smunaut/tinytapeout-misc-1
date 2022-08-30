@@ -34,13 +34,35 @@ jobs:
           repository: s-holst/GDS2WebGL
           path: GDS2WebGL
 
+    # PDK cache
+    - id: pdk_cache
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/pdk
+          ~/openlane
+          ~/caravel_user_project
+          ~/images
+        key: pdk-cache-mpw-6c
+        restore-keys: |
+          pdk-cache-mpw-6c
+
     # build PDK and fetch OpenLane
-    - name: pdk & caravel
+    - if: steps.pdk_cache.outputs.cache-hit != 'true'
+      name: pdk & caravel
       run: |
         cd $HOME
         git clone https://github.com/efabless/caravel_user_project.git -b mpw-6c
         cd caravel_user_project
         make setup
+        cd $HOME
+        mkdir images
+        docker save -o ~/images/openlane.tar efabless/openlane
+
+    - if: steps.pdk_cache.outputs.cache-hit == 'true'
+      name: restore openlane docker
+      run: |
+        docker load -i ~/images/openlane.tar
 
     # fetch the Verilog from Wokwi API
     - name: fetch Verilog

@@ -432,7 +432,7 @@ module user_module_341174480471589458 (
 		.X    (pgen_match)
 	);
 
-	sky130_fd_sc_hd__dfxtp_1 pgen_reg_I[3:0] (
+	sky130_fd_sc_hd__dfxtp_4 pgen_reg_I[3:0] (
 `ifdef WITH_POWER
 		.VPWR (1'b1),
 		.VGND (1'b0),
@@ -537,7 +537,7 @@ module user_module_341174480471589458 (
 	assign acc_carry[0] = acc_ctrl[3];
 
 	// Full adder
-	sky130_fd_sc_hd__fa_1 acc_add_I[7:0] (
+	sky130_fd_sc_hd__fa_2 acc_add_I[7:0] (
 `ifdef WITH_POWER
 		.VPWR (1'b1),
 		.VGND (1'b0),

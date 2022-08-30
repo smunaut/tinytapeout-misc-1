@@ -1,3 +1,6 @@
+# Create a clock from the internal io_in[0] @ 100 MHz
+create_clock [get_pins "\latch[0]/Q"] -name clk_sys -period 10
+
 # Create a clock for the scan chain @ 200 MHz
 create_clock -name clk_scan_in -period 5 [get_ports {clk_in}]
 create_generated_clock -name clk_scan_out -source clk_in -combinational [get_ports {clk_out}]

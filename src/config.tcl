@@ -34,6 +34,7 @@ set ::env(DECAP_CELL) "\
 # clock
 set ::env(CLOCK_PERIOD) "10"
 set ::env(CLOCK_PORT) ""
+set ::env(CLOCK_TREE_SYNTH) 0
 
 set ::env(BASE_SDC_FILE) $::env(DESIGN_DIR)/base.sdc
 

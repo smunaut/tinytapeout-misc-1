@@ -443,10 +443,131 @@ module user_module_341174480471589458 (
 	);
 
 
-	// Dummy
-	// -----
+	// Accumulator
+	// -----------
+
+	// OP                    reset  load  add   sub
+	//
+	// A Input:
+	//  .  zero                X      X
+	//  .  acc_reg                         X     X
+	//
+	// B Input
+	//  .  zero                X
+	//  .  eio_in[19:12]              X    X
+	//  . ~eio_in[19:12]                         X
+	//
+	// C Input
+	//  . zero                 X      X    X
+	//  . one                                    X
+
+	// Signals
+	wire [3:0] acc_ctrl;
+
+	wire [7:0] acc_a;
+	wire [7:0] acc_b;
+	wire [7:0] acc_binv;
+	wire [8:0] acc_carry;
+	wire [7:0] acc_sum;
+	wire [7:0] acc_reg;
+
+	wire       acc_ce;
+	wire       acc_clk;
+
+	// Control pulses
+	assign acc_ctrl = eio_in[31:28];
+
+	// Generate gated clock for clock enable
+	sky130_fd_sc_hd__or4_1 acc_ce_I (
+`ifdef WITH_POWER
+		.VPWR (1'b1),
+		.VGND (1'b0),
+`endif
+		.A    (acc_ctrl[0]),
+		.B    (acc_ctrl[1]),
+		.C    (acc_ctrl[2]),
+		.D    (acc_ctrl[3]),
+		.X    (acc_ce)
+	);
+
+	sky130_fd_sc_hd__dlclkp_1 acc_clk_gate_I (
+`ifdef WITH_POWER
+		.VPWR (1'b1),
+		.VGND (1'b0),
+`endif
+		.CLK  (clk_fast),
+		.GATE (acc_ce),
+		.GCLK (acc_clk)
+	);
+
+	// A-input
+	sky130_fd_sc_hd__o21a_1 acc_a_I[7:0] (
+`ifdef WITH_POWER
+		.VPWR (1'b1),
+		.VGND (1'b0),
+`endif
+		.A1   (acc_ctrl[2]),
+		.A2   (acc_ctrl[3]),
+		.B1   (acc_reg),
+		.X    (acc_a)
+	);
+
+	// B-input
+	sky130_fd_sc_hd__xor2_1 acc_binv_I[7:0] (
+`ifdef WITH_POWER
+		.VPWR (1'b1),
+		.VGND (1'b0),
+`endif
+		.A    (acc_reg),
+		.B    (acc_ctrl[3]),
+		.X    (acc_binv)
+	);
+
+	sky130_fd_sc_hd__and2b_1 acc_b_I[7:0] (
+`ifdef WITH_POWER
+		.VPWR (1'b1),
+		.VGND (1'b0),
+`endif
+		.A_N  (acc_ctrl[0]),
+		.B    (acc_binv),
+		.X    (acc_b)
+	);
+
+	// Carry-Input
+	assign acc_carry[0] = acc_ctrl[3];
+
+	// Full adder
+	sky130_fd_sc_hd__fa_1 acc_add_I[7:0] (
+`ifdef WITH_POWER
+		.VPWR (1'b1),
+		.VGND (1'b0),
+`endif
+		.A    (acc_a),
+		.B    (acc_b),
+		.CIN  (acc_carry[7:0]),
+		.SUM  (acc_sum),
+		.COUT (acc_carry[8:1])
+	);
+
+	// Registers
+	sky130_fd_sc_hd__dfxtp_1 acc_reg_I[7:0] (
+`ifdef WITH_POWER
+		.VPWR (1'b1),
+		.VGND (1'b0),
+`endif
+		.D    (acc_sum),
+		.Q    (acc_reg),
+		.CLK  (acc_clk)
+	);
+
+	// Output
+	assign eio_out[7:0] = acc_reg;
+
+
+	// Loopback
+	// --------
 
 	// Just link in/output
-	assign eio_out[15:0] = eio_in[15:0];
+	assign eio_out[15:8] = eio_in[27:20];
 
 endmodule // user_module_341174480471589458

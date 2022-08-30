@@ -76,10 +76,6 @@ jobs:
     - name: show files
       run: find runs/wokwi/results
 
-    # make the SVG
-    - name: create svg
-      run: python view.py
-
     # make html gds viewer with GDS2WebGL
     - name: GDS2WebGL
       run: |
@@ -97,6 +93,5 @@ jobs:
             runs/wokwi/results/final/*
             runs/wokwi/reports/final_summary_report.csv
             runs/wokwi/reports/synthesis/1-synthesis.stat.rpt.strategy4
-            gds_render.svg
             gds.html
 

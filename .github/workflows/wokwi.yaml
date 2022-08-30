@@ -95,3 +95,11 @@ jobs:
             runs/wokwi/reports/synthesis/1-synthesis.stat.rpt.strategy4
             gds.html
 
+    # archive the whole run dir for debug
+    - name: Archive files (Debug)
+      uses: actions/upload-artifact@v2
+      with:
+          # path depends on the tag and the module name
+          name: Debug
+          path: |
+            runs/wokwi/*

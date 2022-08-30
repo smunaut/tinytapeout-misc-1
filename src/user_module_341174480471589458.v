@@ -9,6 +9,12 @@ module user_module_341174480471589458 (
 	output wire  [7:0] io_out
 );
 
-	assign io_out = io_in;
+	// If io_in[0] is clock, STA doesn't like direct feedback
+	reg toggle;
+
+	always @(posedge io_in[0])
+		toggle <= ~toggle;
+
+	assign io_out = { io_in[7:1], toggle };
 
 endmodule // user_module_341174480471589458

@@ -8,6 +8,9 @@ create_clock [get_pins "\user_module.clk_div_buf_I/X"] -name clk_fast -period 5
 create_clock -name clk_scan_in -period 5 [get_ports {clk_in}]
 create_generated_clock -name clk_scan_out -source clk_in -combinational [get_ports {clk_out}]
 
+# Grouping
+set_clock_groups -asynchronous -group {clk_scan_in clk_scan_out clk_slow} -group clk_fast
+
 # Scan chain input  0.5 ns setup time, 0.5 ns hold time
 set_input_delay  -min  0.5 -clock [get_clocks clk_scan_in]  [get_ports {data_in}]
 set_input_delay  -max  0.5 -clock [get_clocks clk_scan_in]  [get_ports {data_in}]
